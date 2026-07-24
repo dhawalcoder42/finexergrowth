@@ -358,6 +358,7 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
       <button class="tab" data-view="gsc" role="tab">Search Console</button>
       <button class="tab" data-view="retro" role="tab">Retro notes</button>
       <button class="tab" data-view="data" role="tab">Data manager</button>
+      <a class="tab" id="navReport" href="progress-report.html" style="display:none;text-decoration:none" role="tab">Progress report ↗</a>
     </nav>
   </div>
 </header>
@@ -886,6 +887,7 @@ function applyRole(){
   $('#whoami').textContent=cloudUser?cloudUser.email.split('@')[0]:'';
   const adm=cloudRole==='admin';
   $('#teamCard').style.display=adm?'':'none';
+  const nr=$('#navReport');if(nr)nr.style.display=adm?'':'none';
   if(adm)refreshAccess();
 }
 async function refreshAccess(){
@@ -1796,6 +1798,7 @@ function seedDefaults(S){
 
 /* ---------------- views & events ---------------- */
 function showView(v){
+  try{if(typeof history!=='undefined'&&history.replaceState)history.replaceState(null,'','#'+v)}catch(e){}
   $$('nav .tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));
   $$('section.view').forEach(s=>s.classList.toggle('active',s.id==='view-'+v));
   renderView(v);
@@ -1828,7 +1831,9 @@ async function boot(){
   buildScope();
   const dy=allDemoYms();
   $('#dFrom').value=dy[0]||'';$('#dTo').value=dy[dy.length-1]||'';
-  renderView('overview');
+  const hh=(typeof location!=='undefined'&&location.hash?String(location.hash):'').slice(1);
+  const views=['overview','demos','content','seo','gsc','retro','data'];
+  if(views.includes(hh))showView(hh);else renderView('overview');
   $('#storageStatus').innerHTML=storageLabel();
   startRealtime();
   applyRole();
