@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#030044">
 <title>Finexer Growth Retrospective</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 20'><g fill='%233057C3'><path d='M22.58,1a2.51,2.51,0,0,0-2-1H6.46A2.44,2.44,0,0,0,4.12,1.68l-4,12a2.41,2.41,0,0,0,2.29,3.17H3l.62-1.76L2.4,15a.55.55,0,0,1-.55-.77l4-12a.58.58,0,0,1,.59-.38H20.53a.67.67,0,0,1,.64.84L21,3.23h1.9A2.51,2.51,0,0,0,22.58,1Z'/><path d='M24.86,5a1.54,1.54,0,0,0-.48-.08H10.3A1.54,1.54,0,0,0,8.83,6l-4,12a1.54,1.54,0,0,0,1.48,2h14.1a1.54,1.54,0,0,0,1.45-1l4-12A1.54,1.54,0,0,0,25,5h-.11Zm-2.4,2.35-.81,2.3a.51.51,0,0,1-.48.34h-3a8.2,8.2,0,0,0-6.62,3.39L8.31,17.91a.16.16,0,0,1-.13.06H8a.16.16,0,0,1-.15-.21L11.49,7.55a.85.85,0,0,1,.8-.58h9.85a.34.34,0,0,1,.31.42Z'/></g></svg>">
 <meta name="description" content="Internal business-impact dashboard for Finexer weekly and monthly retrospective calls: demos, content, LinkedIn and keyword rankings.">
@@ -209,6 +210,67 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
   section.view{display:block!important;page-break-after:always}
   .card,.kpi{box-shadow:none;border:1px solid var(--ink-100)}
 }
+
+/* ---------- Mobile ---------- */
+.tbl-wrap{-webkit-overflow-scrolling:touch}
+@media(max-width:760px){
+  .wrap{padding:0 14px}
+  main{padding:var(--s-4) 0 var(--s-12)}
+  section.view>*+*{margin-top:var(--s-4)}
+  input,select,textarea{font-size:16px}
+  .card{padding:var(--s-4)}
+  .card h3{font-size:16px}
+  header{padding-top:var(--s-3)}
+  .head-row{gap:10px;padding-bottom:var(--s-3)}
+  .logo-plate{padding:7px 11px}
+  .brand .logo{height:19px}
+  .brand .sub{font-size:10px;margin-top:1px}
+  .scope{padding:4px 5px 4px 11px;gap:6px}
+  .scope select{padding:5px 8px}
+  .btn{padding:8px 13px;font-size:12.5px}
+  nav{scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  nav .tab{padding:10px 13px;font-size:13px}
+  .hero{padding:20px 18px;gap:var(--s-3)}
+  .hero .big{font-size:clamp(48px,16vw,84px)}
+  .hero .big small{margin-top:6px;font-size:11px}
+  .hero .story h2{font-size:19px}
+  .hero .story p{font-size:13.5px}
+  .chip{font-size:11.5px;padding:4px 10px}
+  .g-kpi{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi{padding:12px 14px;gap:3px}
+  .kpi .value{font-size:28px}
+  .kpi .label{font-size:10px}
+  .kpi .foot{font-size:11px}
+  .filters{gap:8px}
+  .filters .fld{flex:1 1 46%}
+  .filters select,.filters input[type=text],.filters input[type=search],.filters input[type=month],.filters input[type=number]{width:100%;min-width:0}
+  .switch{flex:1 1 100%;justify-content:space-between}
+  .count-note{margin-left:0;flex-basis:100%}
+  .chart-box{height:235px}
+  .chart-box.tall{height:255px}
+  .chart-box.short{height:185px}
+  .tbl-wrap table{min-width:560px}
+  th{padding:9px 10px}
+  td{padding:8px 10px}
+  .statline{gap:14px}
+  .statline .s b{font-size:22px}
+  .fillgrid{grid-template-columns:1fr 1fr}
+  .bucket-strip{grid-template-columns:repeat(auto-fit,minmax(94px,1fr));gap:8px}
+  .bucket{padding:10px 6px}
+  .bucket b{font-size:23px}
+  .bucket span{font-size:9.5px;letter-spacing:.06em}
+  .dropzone{padding:var(--s-4)}
+  .dropzone textarea{min-height:96px}
+  .impact-quote{padding:12px 14px;font-size:13.5px}
+  .retro-history .item .cols{grid-template-columns:1fr}
+  .modal-bg{padding:0;align-items:flex-end}
+  .modal{max-width:none;border-radius:var(--r-lg) var(--r-lg) 0 0;max-height:92vh;padding:var(--s-4) var(--s-4) calc(var(--s-4) + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:14px;max-width:calc(100vw - 28px);text-align:center}
+  footer{padding:var(--s-6) 0;font-size:11.5px}
+}
+@media(max-width:600px){#btnPrint{display:none}}
+@media(max-width:380px){.kpi .value{font-size:25px}.fillgrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -305,7 +367,7 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
     <div class="dropzone" id="demoDrop" style="padding:16px">
       <strong>Drop Bookings .tsv / .csv here</strong> or
       <button class="btn btn-quiet" id="demoPick">choose file</button>
-      <input type="file" id="demoFile" accept=".csv,.tsv,.txt,.xlsx,.xls" hidden>
+      <input type="file" id="demoFile" multiple accept=".csv,.tsv,.txt,.xlsx,.xls" hidden>
     </div>
   </div>
 
@@ -374,7 +436,7 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
     <div class="dropzone" id="calDrop" style="padding:16px">
       <strong>Drop calendar .xlsx here</strong> or
       <button class="btn btn-quiet" id="calPick">choose file</button>
-      <input type="file" id="calFile" accept=".xlsx,.xls,.csv,.tsv,.txt" hidden>
+      <input type="file" id="calFile" multiple accept=".xlsx,.xls,.csv,.tsv,.txt" hidden>
     </div>
   </div>
 
@@ -389,7 +451,7 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
     <div class="dropzone" id="liDrop">
       <strong>Drop the LinkedIn export here</strong> or
       <button class="btn btn-quiet" id="liPick">choose file</button>
-      <input type="file" id="liFile" accept=".xls,.xlsx,.csv,.tsv,.txt" hidden>
+      <input type="file" id="liFile" multiple accept=".xls,.xlsx,.csv,.tsv,.txt" hidden>
       <p>Rolling 90-day exports <b>merge by date</b>. Upload each month and the history keeps growing with no duplicates.</p>
       <textarea id="liPaste" placeholder="…or paste the Metrics or All posts table and press Process"></textarea>
       <div class="save-row" style="justify-content:center">
@@ -449,9 +511,9 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
   <div class="card">
     <h3>Drop in Ahrefs data <span class="hint">Rank Tracker / Organic keywords export. CSV, TSV or paste.</span></h3>
     <div class="dropzone" id="seoDrop">
-      <strong>Drag an Ahrefs export here</strong> or
+      <strong>Drag one or more Ahrefs exports here</strong> or
       <button class="btn btn-quiet" id="seoPick">choose file</button>
-      <input type="file" id="seoFile" accept=".csv,.tsv,.txt,.xlsx,.xls" hidden>
+      <input type="file" id="seoFile" multiple accept=".csv,.tsv,.txt,.xlsx,.xls" hidden>
       <p>Needs at least <b>Keyword</b> + <b>Current position</b> columns. <b>Previous position</b> unlocks improved / declined / new / lost.</p>
       <textarea id="seoPaste" placeholder="…or paste rows straight from Ahrefs / Excel and press Analyse"></textarea>
       <div class="save-row" style="justify-content:center">
@@ -551,9 +613,9 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
   <div class="card">
     <h3>Import anything <span class="hint">bookings TSV · writer calendar XLSX · Ahrefs export · LinkedIn export · CSV / paste, auto-detected</span></h3>
     <div class="dropzone" id="anyDrop">
-      <strong>Drop a file</strong> (.tsv .csv .xlsx .txt) or
+      <strong>Drop files</strong> (.tsv .csv .xlsx .txt — multiple at once is fine) or
       <button class="btn btn-quiet" id="anyPick">choose file</button>
-      <input type="file" id="anyFile" accept=".csv,.tsv,.txt,.xlsx,.xls" hidden>
+      <input type="file" id="anyFile" multiple accept=".csv,.tsv,.txt,.xlsx,.xls" hidden>
       <p>Microsoft Bookings exports merge into demos (duplicates removed automatically). Calendar files replace that writer's briefs. Ahrefs files become a new snapshot. LinkedIn company-page exports (.xls) become LinkedIn snapshots that merge by date.</p>
       <textarea id="anyPaste" placeholder="…or paste rows from Excel / Bookings / Ahrefs"></textarea>
       <div class="save-row" style="justify-content:center">
@@ -1236,15 +1298,20 @@ function liPreview(li,sourceName){
 }
 
 /* ---- modal + apply ---- */
-function openModal(html){$('#modalBody').innerHTML=html;$('#modalBg').classList.add('open')}
-function closeModal(){$('#modalBg').classList.remove('open')}
+const modalWaiters=[];
+function openModal(html){
+  const note=(qBusy&&fileQueue.length)?'<p class="mini-note" style="margin-top:10px">'+fileQueue.length+' more file'+(fileQueue.length>1?'s':'')+' waiting in the import queue…</p>':'';
+  $('#modalBody').innerHTML=html+note;$('#modalBg').classList.add('open');
+}
+function closeModal(){$('#modalBg').classList.remove('open');modalWaiters.splice(0).forEach(r=>r())}
+function waitModalClosed(){if(!$('#modalBg').classList.contains('open'))return Promise.resolve();return new Promise(res=>modalWaiters.push(res))}
 $('#modalBg').addEventListener('click',e=>{if(e.target.id==='modalBg')closeModal()});
 
 async function handleParsed(rows,sourceName){
   if(!rows.length)return toast('Nothing to parse');
   const {headers,objs}=objectify(rows);
   const type=detectType(headers);
-  if(!type){openModal('<h3>Couldn\'t recognise this data</h3><p class="mini-note">Headers found: '+esc(headers.slice(0,10).join(', '))+'…</p><p style="margin-top:10px">It needs Bookings columns (Booking Id, Date Time…), calendar columns (Sr No., Primary Keyword…) or Ahrefs columns (Keyword, Current position…) or a LinkedIn export (Post title / Impressions…).</p><div class="row"><button class="btn btn-quiet" onclick="document.getElementById(\'modalBg\').classList.remove(\'open\')">Close</button></div>');return}
+  if(!type){openModal('<h3>Couldn\'t recognise this data</h3><p class="mini-note">Headers found: '+esc(headers.slice(0,10).join(', '))+'…</p><p style="margin-top:10px">It needs Bookings columns (Booking Id, Date Time…), calendar columns (Sr No., Primary Keyword…) or Ahrefs columns (Keyword, Current position…) or a LinkedIn export (Post title / Impressions…).</p><div class="row"><button class="btn btn-quiet" onclick="closeModal()">Close</button></div>');return}
   if(type==='bookings'){
     const mapped=mapBookings(objs);
     const have=new Set(state.demos.map(d=>d.id));
@@ -1299,18 +1366,34 @@ async function handleFile(file){
       const wb=XLSX.read(buf,{type:'array'});
       const li=liFromWorkbook(wb);
       if(li){liPreview(li,file.name);return}
-      handleParsed(bestSheetRows(wb),file.name);return;
+      await handleParsed(bestSheetRows(wb),file.name);return;
     }
-    handleParsed(rowsFromText(decodeBytes(buf)),file.name);
+    await handleParsed(rowsFromText(decodeBytes(buf)),file.name);
   }catch(e){toast('Could not read '+file.name);console.error(e)}
+}
+const fileQueue=[];let qBusy=false;
+async function enqueueFiles(list){
+  const files=[...list].filter(f=>f&&f.name);
+  if(!files.length)return;
+  files.forEach(f=>fileQueue.push(f));
+  if(files.length>1)toast(files.length+' files queued — review each one in turn');
+  if(qBusy)return;
+  qBusy=true;
+  try{
+    while(fileQueue.length){
+      const f=fileQueue.shift();
+      await handleFile(f);
+      await waitModalClosed();
+    }
+  }finally{qBusy=false}
 }
 function wireDrop(zoneId,fileInputId,pickId,pasteId,goId){
   const z=$('#'+zoneId),fi=$('#'+fileInputId);
   ;['dragover','dragenter'].forEach(ev=>z.addEventListener(ev,e=>{e.preventDefault();z.classList.add('drag')}));
   ;['dragleave','drop'].forEach(ev=>z.addEventListener(ev,e=>{e.preventDefault();z.classList.remove('drag')}));
-  z.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)handleFile(f)});
+  z.addEventListener('drop',e=>{if(e.dataTransfer.files.length)enqueueFiles(e.dataTransfer.files)});
   $('#'+pickId).onclick=()=>fi.click();
-  fi.onchange=()=>{if(fi.files[0])handleFile(fi.files[0]);fi.value=''};
+  fi.onchange=()=>{if(fi.files.length)enqueueFiles(fi.files);fi.value=''};
   if(goId)$('#'+goId).onclick=()=>{const t=$('#'+pasteId).value;if(!t.trim())return toast('Paste some rows first');handleParsed(rowsFromText(t),'pasted data');$('#'+pasteId).value=''};
 }
 
@@ -1338,7 +1421,7 @@ function renderView(v){
   if(v==='retro')renderRetro();
   if(v==='data')$('#storageStatus').innerHTML=storageLabel();
 }
-function renderAll(){buildScope();renderView($$('nav .tab').find(t=>t.classList.contains('active')).dataset.view)}
+function renderAll(){buildScope();const t=$$('nav .tab').find(x=>x.classList.contains('active'));renderView(t?t.dataset.view:'overview')}
 
 async function boot(){
   await initBackend();
