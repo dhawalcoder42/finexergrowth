@@ -500,6 +500,12 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
   </div>
 
   <div class="card section-gap">
+    <h3>Writer scoreboard <span class="hint" id="wsMonth"></span></h3>
+    <div class="tbl-wrap"><table id="tblWriters"></table></div>
+    <p class="explain">“Published” counts briefs with a deadline in the retro month whose status is Live. Ranking columns check each writer’s Live blogs against the latest Ahrefs snapshot — by primary keyword, or any keyword pointing at the blog URL. GSC clicks sums Search Console clicks on their live URLs over the export range.</p>
+  </div>
+
+  <div class="card section-gap">
     <h3>Keyword calendar <span class="hint">from Poulami + Sarang briefs. Re-import anytime in Data manager</span></h3>
     <div class="statline" id="funnelStats"></div>
     <div class="tbl-wrap" style="max-height:480px;overflow:auto"><table id="tblCal"></table></div>
@@ -1151,6 +1157,24 @@ function renderContent(){
   const fc={};state.calendar.forEach(i=>{const f=String(i.funnel||'').trim().toUpperCase()||'Not set';fc[f]=(fc[f]||0)+1});
   const fkeys=Object.keys(fc).sort((a,b)=>{const ia=fOrder.indexOf(a),ib=fOrder.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b)});
   $('#funnelStats').innerHTML=fkeys.map(k=>'<div class="s"><b class="num">'+fc[k]+'</b><span>'+esc(k)+'</span></div>').join('');
+  const rk=latestRankMaps();
+  const wnames=[...new Set(state.calendar.map(i=>String(i.writer||'')))].filter(Boolean).sort();
+  $('#wsMonth').textContent=ymLabel(scopeYm);
+  const wrows=wnames.map(w=>{
+    const mine=state.calendar.filter(i=>i.writer===w);
+    const due=mine.filter(i=>i.deadline&&ymOf(i.deadline)===scopeYm);
+    const pub=due.filter(i=>normStatus(i.status)==='Done').length;
+    const liveAll=mine.filter(i=>normStatus(i.status)==='Done');
+    let ranked=0,t10=0;
+    liveAll.forEach(i=>{const r=rankOf(i,rk);if(r!=null){ranked++;if(r<=10)t10++}});
+    const urls=new Set(liveAll.map(i=>normUrl(i.live)).filter(Boolean));
+    const clicks=((state.gsc&&state.gsc.pages)||[]).reduce((a,p)=>a+(urls.has(normUrl(p.n))?p.c:0),0);
+    return {w,due:due.length,pub,prog:mine.filter(i=>normStatus(i.status)==='In progress').length,queued:mine.filter(i=>normStatus(i.status)==='Not started').length,live:liveAll.length,ranked,t10,clicks};
+  });
+  const tot=wrows.reduce((a,r)=>({due:a.due+r.due,pub:a.pub+r.pub,prog:a.prog+r.prog,queued:a.queued+r.queued,live:a.live+r.live,ranked:a.ranked+r.ranked,t10:a.t10+r.t10,clicks:a.clicks+r.clicks}),{due:0,pub:0,prog:0,queued:0,live:0,ranked:0,t10:0,clicks:0});
+  $('#tblWriters').innerHTML='<thead><tr><th>Writer</th><th class="r">Due · '+ymShort(scopeYm)+'</th><th class="r">Published · '+ymShort(scopeYm)+'</th><th class="r">In progress</th><th class="r">Queued</th><th class="r">Live all-time</th><th class="r">KWs ranking</th><th class="r">Top 10</th><th class="r">GSC clicks</th></tr></thead><tbody>'+
+    wrows.map(r=>'<tr><td><b>'+esc(r.w)+'</b></td><td class="num r">'+r.due+'</td><td class="num r">'+r.pub+'</td><td class="num r">'+r.prog+'</td><td class="num r">'+r.queued+'</td><td class="num r">'+r.live+'</td><td class="num r">'+r.ranked+(r.live?' <span class="mini-note">of '+r.live+'</span>':'')+'</td><td class="num r">'+r.t10+'</td><td class="num r">'+r.clicks.toLocaleString()+'</td></tr>').join('')+
+    '<tr style="border-top:2px solid var(--ink-100)"><td><b>Total</b></td><td class="num r"><b>'+tot.due+'</b></td><td class="num r"><b>'+tot.pub+'</b></td><td class="num r"><b>'+tot.prog+'</b></td><td class="num r"><b>'+tot.queued+'</b></td><td class="num r"><b>'+tot.live+'</b></td><td class="num r"><b>'+tot.ranked+'</b></td><td class="num r"><b>'+tot.t10+'</b></td><td class="num r"><b>'+tot.clicks.toLocaleString()+'</b></td></tr></tbody>';
 
   const cc=contentCounts();
   const today=todayIso();
@@ -1180,8 +1204,8 @@ function renderContent(){
     options:{maintainAspectRatio:false,scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,grid:{color:'#E3E6F3'}}}}});
 
   const rows=list.slice().sort((a,b)=>(a.deadline||'9999')<(b.deadline||'9999')?-1:1);
-  $('#tblCal').innerHTML='<thead><tr><th>#</th><th>Writer</th><th>Primary keyword</th><th class="r">Vol</th><th class="r">KD</th><th>Funnel</th><th>Status</th><th>Deadline</th><th>Live</th><th></th></tr></thead><tbody>'+
-    rows.map(i=>'<tr><td class="num">'+esc(i.sr)+'</td><td>'+esc(i.writer)+'</td><td><b>'+esc(i.kw)+'</b>'+(i.kw2?'<br><span class="mini-note">+ '+esc(i.kw2)+'</span>':'')+'</td><td class="num r">'+esc(i.vol||'n/a')+'</td><td class="num r">'+esc(i.kd||'n/a')+'</td><td>'+esc(i.funnel||'n/a')+'</td><td><select class="cal-status" data-uid="'+esc(i.uid)+'">'+CAL_STATUSES.map(s=>'<option'+(s===i.status?' selected':'')+'>'+s+'</option>').join('')+'</select></td><td class="num">'+esc(i.deadline||'n/a')+'</td><td>'+(i.live?'<a href="'+esc(i.live)+'" target="_blank" rel="noopener">open ↗</a>':'n/a')+'</td><td><button class="icon-btn" data-edit="'+esc(i.uid)+'" title="Edit brief">✎</button></td></tr>').join('')+'</tbody>';
+  $('#tblCal').innerHTML='<thead><tr><th>#</th><th>Writer</th><th>Primary keyword</th><th class="r">Vol</th><th class="r">KD</th><th>Funnel</th><th class="r">Rank</th><th>Status</th><th>Deadline</th><th>Live</th><th></th></tr></thead><tbody>'+
+    rows.map(i=>'<tr><td class="num">'+esc(i.sr)+'</td><td>'+esc(i.writer)+'</td><td><b>'+esc(i.kw)+'</b>'+(i.kw2?'<br><span class="mini-note">+ '+esc(i.kw2)+'</span>':'')+'</td><td class="num r">'+esc(i.vol||'n/a')+'</td><td class="num r">'+esc(i.kd||'n/a')+'</td><td>'+esc(i.funnel||'n/a')+'</td><td class="r">'+rankCell(i,rk)+'</td><td><select class="cal-status" data-uid="'+esc(i.uid)+'">'+CAL_STATUSES.map(s=>'<option'+(s===i.status?' selected':'')+'>'+s+'</option>').join('')+'</select></td><td class="num">'+esc(i.deadline||'n/a')+'</td><td>'+(i.live?'<a href="'+esc(i.live)+'" target="_blank" rel="noopener">open ↗</a>':'n/a')+'</td><td><button class="icon-btn" data-edit="'+esc(i.uid)+'" title="Edit brief">✎</button></td></tr>').join('')+'</tbody>';
 
   /* LinkedIn fill-ins */
   $('#liMonthLabel').textContent=ymLabel(scopeYm);
@@ -1341,6 +1365,18 @@ function impactText(){
   }
   t+='All-time: '+state.demos.length+' demos on record. ';
   t+='Content: '+(dueThis?doneThis+' of '+dueThis+' briefs published against this month\'s deadlines':'no briefs dated this month')+'; pipeline '+cc.Done+' live / '+cc['In progress']+' in progress / '+cc['Not started']+' queued. ';
+  const wn2=[...new Set(state.calendar.map(i=>String(i.writer||'')))].filter(Boolean).sort();
+  if(wn2.length){
+    const rk2=latestRankMaps();
+    t+='Writers: '+wn2.map(w=>{
+      const mine=state.calendar.filter(i=>i.writer===w);
+      const due=mine.filter(i=>i.deadline&&ymOf(i.deadline)===scopeYm);
+      const pub=due.filter(i=>normStatus(i.status)==='Done').length;
+      const liveAll=mine.filter(i=>normStatus(i.status)==='Done');
+      let ranked=0,t10=0;liveAll.forEach(i=>{const r=rankOf(i,rk2);if(r!=null){ranked++;if(r<=10)t10++}});
+      return w+' '+pub+'/'+due.length+' published for these deadlines ('+liveAll.length+' live all-time; '+ranked+' keywords ranking'+(t10?', '+t10+' in Top 10':'')+')';
+    }).join('; ')+'. ';
+  }
   if(li.planned!=null||li.published!=null)t+='LinkedIn plan: '+(li.published||0)+' of '+(li.planned||0)+' posts published'+(li.newsletter?(', '+li.newsletter+' newsletter issue'+(li.newsletter>1?'s':'')):'')+'. ';
   const laT=liMonthAgg(scopeYm);
   if(laT.days>0||laT.posts>0)t+='LinkedIn (imported): '+laT.posts+' posts, '+laT.impr.toLocaleString()+' impressions, '+laT.er+'% engagement rate. ';
@@ -1365,6 +1401,36 @@ function renderRetro(){
   $('#tDemos').value=tt.demos??'';$('#tBlogs').value=tt.blogs??'';$('#tLi').value=tt.li??'';
   const hist=Object.keys(state.manual.retros).sort().reverse();
   $('#retroHistory').innerHTML=hist.length?hist.map(m=>{const x=state.manual.retros[m];return '<div class="item"><h4>'+ymLabel(m)+'</h4><div class="cols"><div><b>Went well</b>'+esc(x.well||'n/a')+'</div><div><b>Didn\'t</b>'+esc(x.bad||'n/a')+'</div><div><b>Actions</b>'+esc(x.actions||'n/a')+'</div><div><b>Learnings</b>'+esc(x.learn||'n/a')+'</div></div></div>'}).join(''):'<p class="mini-note">Nothing saved yet. Your first retro will appear here.</p>';
+}
+
+/* ---------------- keyword rank lookup ---------------- */
+function normUrl(u){return String(u||'').trim().replace(/\/+$/,'').toLowerCase()}
+function latestRankMaps(){
+  const snaps=(state.seo&&state.seo.snapshots)||[];
+  const mp={kw:{},url:{}};
+  if(!snaps.length)return mp;
+  const s2=snaps[snaps.length-1];
+  (s2.rows||[]).forEach(r=>{
+    if(r.cur==null)return;
+    const k=String(r.kw||'').toLowerCase().trim();
+    if(k&&(mp.kw[k]==null||r.cur<mp.kw[k]))mp.kw[k]=r.cur;
+    const u=normUrl(r.url);
+    if(u&&(mp.url[u]==null||r.cur<mp.url[u]))mp.url[u]=r.cur;
+  });
+  return mp;
+}
+function rankOf(i,rk){
+  const k=String(i.kw||'').toLowerCase().trim();
+  if(k&&rk.kw[k]!=null)return rk.kw[k];
+  const u=normUrl(i.live);
+  if(u&&rk.url[u]!=null)return rk.url[u];
+  return null;
+}
+function rankCell(i,rk){
+  const r=rankOf(i,rk);
+  if(r==null)return '<span class="mini-note" title="Not in the latest Ahrefs snapshot">—</span>';
+  const cls=r<=10?'new':(r<=20?'pending':'');
+  return '<span class="pill '+cls+'" title="Latest Ahrefs snapshot · best position for this keyword/URL">#'+r+'</span>';
 }
 
 /* ---------------- Search Console ---------------- */
