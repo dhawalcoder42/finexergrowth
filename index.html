@@ -753,11 +753,12 @@ function logImport(msg){const el=$('#importLog');if(el.textContent.startsWith('N
    Google/email login, an email allowlist with admin roles, and shared
    data that syncs live for everyone. */
 const CONFIG={
-  apiKey: "AIzaSyBstcvhAL0Q0zkcz5EXUwMT6gBL0ryKPOY",
-  authDomain: "finexer-retro.firebaseapp.com",
-  projectId: "finexer-retro",
+  firebase:{
+    apiKey:"AIzaSyBstcvhAL0Q0zkcz5EXUwMT6gBL0ryKPOY",
+    authDomain:"finexer-retro.firebaseapp.com",
+    projectId:"finexer-retro"
+  }
 };
-
 /* ---------------- storage ---------------- */
 const KEYS={demos:'fnx-demos',calendar:'fnx-calendar',seo:'fnx-seo',manual:'fnx-manual',linkedin:'fnx-linkedin'};
 const mem={};
