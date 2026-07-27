@@ -297,6 +297,10 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
 .auth-submit{width:100%;padding:12px}
 .auth-link{border:none;background:none;color:var(--blue-700);font:600 12.5px var(--font-body);margin-top:12px;cursor:pointer;text-decoration:underline}
 @media(max-width:480px){.auth-card{padding:26px 20px}}
+.pf-head{display:flex;align-items:center;gap:14px;margin:8px 0 14px}
+.pf-av{width:52px;height:52px;border-radius:14px;background:linear-gradient(140deg,var(--blue-600),var(--blue-800));color:#fff;display:flex;align-items:center;justify-content:center;font:800 20px var(--font-display);flex:none}
+.pf-head h3{font-family:var(--font-display);font-weight:800;font-size:21px;color:var(--blue-950)}
+.pf-list{margin:4px 0 0 18px;display:grid;gap:9px;font-size:13.5px}
 </style>
 </head>
 <body>
@@ -357,8 +361,8 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
       <button class="tab" data-view="seo" role="tab">Keywords &amp; SEO</button>
       <button class="tab" data-view="gsc" role="tab">Search Console</button>
       <button class="tab" data-view="retro" role="tab">Retro notes</button>
+      <button class="tab" data-view="profile" role="tab">My profile</button>
       <button class="tab" data-view="data" role="tab">Data manager</button>
-      <a class="tab" id="navReport" href="finexer-progress-report.html" style="display:none;text-decoration:none" role="tab">Progress report ↗</a>
     </nav>
   </div>
 </header>
@@ -504,6 +508,12 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
     <h3>Writer scoreboard <span class="hint" id="wsMonth"></span></h3>
     <div class="tbl-wrap"><table id="tblWriters"></table></div>
     <p class="explain">“Published” counts briefs with a deadline in the retro month whose status is Live. Ranking columns check each writer’s Live blogs against the latest Ahrefs snapshot — by primary keyword, or any keyword pointing at the blog URL. GSC clicks sums Search Console clicks on their live URLs over the export range.</p>
+  </div>
+
+  <div class="card section-gap">
+    <h3>Writer ranking impact <span class="hint" id="wriHint"></span></h3>
+    <div class="tbl-wrap" style="max-height:360px;overflow:auto"><table id="tblWri"></table></div>
+    <p class="explain">Every live writer blog whose primary keyword (or blog URL) shows in the latest Ahrefs snapshot, with movement vs the previous check. Rankings usually take 4–8 weeks after publish — this fills up with every import.</p>
   </div>
 
   <div class="card section-gap">
@@ -672,6 +682,33 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
       <p><strong>Drop the GSC CSV files here</strong> or <button class="btn btn-quiet" id="gscPick" type="button">choose files</button></p>
       <input type="file" id="gscFile" multiple accept=".csv,.txt,.tsv,.xlsx" hidden>
     </div>
+  </div>
+</section>
+
+<section class="view" id="view-profile">
+  <div class="card">
+    <div class="filters">
+      <div class="fld"><label>Profile</label><select id="pfSel"></select></div>
+      <span class="count-note" id="pfHint"></span>
+    </div>
+    <div class="pf-head" id="pfHead"></div>
+    <div class="g-kpi" id="pfKpis"></div>
+  </div>
+  <div class="g-2 section-gap">
+    <div class="card">
+      <h3>Achieved · outcomes <span class="hint" id="pfMonA"></span></h3>
+      <div class="tbl-wrap" style="max-height:380px;overflow:auto"><table id="tblPfWins"></table></div>
+      <p class="explain">Live blogs whose keywords are ranking in the latest Ahrefs snapshot, plus Search Console clicks on this person’s pages.</p>
+    </div>
+    <div class="card">
+      <h3>Pending <span class="count-note" id="pfPendCount"></span></h3>
+      <div class="tbl-wrap" style="max-height:380px;overflow:auto"><table id="tblPfPend"></table></div>
+      <p class="explain">Everything not yet Live, sorted by deadline. Overdue = deadline passed without publishing.</p>
+    </div>
+  </div>
+  <div class="card section-gap">
+    <h3>Improvements &amp; focus</h3>
+    <ul class="pf-list" id="pfImp"></ul>
   </div>
 </section>
 
@@ -887,7 +924,6 @@ function applyRole(){
   $('#whoami').textContent=cloudUser?cloudUser.email.split('@')[0]:'';
   const adm=cloudRole==='admin';
   $('#teamCard').style.display=adm?'':'none';
-  const nr=$('#navReport');if(nr)nr.style.display=adm?'':'none';
   if(adm)refreshAccess();
 }
 async function refreshAccess(){
@@ -1160,6 +1196,13 @@ function renderContent(){
   const fkeys=Object.keys(fc).sort((a,b)=>{const ia=fOrder.indexOf(a),ib=fOrder.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b)});
   $('#funnelStats').innerHTML=fkeys.map(k=>'<div class="s"><b class="num">'+fc[k]+'</b><span>'+esc(k)+'</span></div>').join('');
   const rk=latestRankMaps();
+  const rkF=rankMapsFull();
+  const wri=rankImpact(rkF);
+  const lastSnap=(state.seo.snapshots||[])[state.seo.snapshots.length-1];
+  $('#wriHint').textContent=lastSnap?('snapshot '+lastSnap.date+(lastSnap.prevDate?' vs '+lastSnap.prevDate:'')):'no snapshot yet';
+  $('#tblWri').innerHTML='<thead><tr><th>Writer</th><th>Keyword</th><th class="r">Pos</th><th class="r">\u0394</th><th>Due</th><th>Blog</th></tr></thead><tbody>'+
+    (wri.length?wri.map(r=>'<tr><td><b>'+esc(r.w)+'</b></td><td>'+esc(r.kw)+'</td><td class="r">'+rankPill(r.cur)+'</td><td class="r">'+deltaPill(r.prev,r.cur)+'</td><td>'+(r.ym?ymShort(r.ym):'\u2014')+'</td><td>'+(r.live?'<a href="'+esc(r.live)+'" target="_blank" rel="noopener">open \u2197</a>':'\u2014')+'</td></tr>').join(''):
+    '<tr><td colspan="6" class="mini-note">None ranking yet \u2014 expected in the first 4\u20138 weeks after publish.</td></tr>')+'</tbody>';
   const wnames=[...new Set(state.calendar.map(i=>String(i.writer||'')))].filter(Boolean).sort();
   $('#wsMonth').textContent=ymLabel(scopeYm);
   const wrows=wnames.map(w=>{
@@ -1433,6 +1476,121 @@ function rankCell(i,rk){
   if(r==null)return '<span class="mini-note" title="Not in the latest Ahrefs snapshot">—</span>';
   const cls=r<=10?'new':(r<=20?'pending':'');
   return '<span class="pill '+cls+'" title="Latest Ahrefs snapshot · best position for this keyword/URL">#'+r+'</span>';
+}
+
+function rankMapsFull(){
+  const snaps=(state.seo&&state.seo.snapshots)||[];
+  const mp={kw:{},url:{}};
+  if(!snaps.length)return mp;
+  (snaps[snaps.length-1].rows||[]).forEach(r=>{
+    if(r.cur==null)return;
+    const k=String(r.kw||'').toLowerCase().trim();
+    if(k&&(mp.kw[k]==null||r.cur<mp.kw[k].cur))mp.kw[k]={cur:r.cur,prev:r.prev==null?null:r.prev};
+    const u=normUrl(r.url);
+    if(u&&(mp.url[u]==null||r.cur<mp.url[u].cur))mp.url[u]={cur:r.cur,prev:r.prev==null?null:r.prev};
+  });
+  return mp;
+}
+function bestRankInfo(i,rkF){
+  const k=String(i.kw||'').toLowerCase().trim();
+  if(k&&rkF.kw[k])return rkF.kw[k];
+  const u=normUrl(i.live);
+  if(u&&rkF.url[u])return rkF.url[u];
+  return null;
+}
+function kwShow(k){return String(k||'').split(/\s{2,}|Live URL/i)[0].trim()}
+function rankPill(cur){const cls=cur<=10?'new':(cur<=20?'pending':'');return '<span class="pill '+cls+'">#'+cur+'</span>'}
+function deltaPill(prev,cur){
+  if(prev==null)return '<span class="pill new">NEW</span>';
+  const d=prev-cur;
+  if(d>0)return '<span class="up">\u25b2 +'+d+'</span>';
+  if(d<0)return '<span class="down">\u25bc '+d+'</span>';
+  return '<span class="mini-note">=</span>';
+}
+function rankImpact(rkF,writer){
+  const out=[];
+  state.calendar.forEach(i=>{
+    if(normStatus(i.status)!=='Done')return;
+    if(writer&&i.writer!==writer)return;
+    const f=bestRankInfo(i,rkF);
+    if(!f)return;
+    out.push({w:i.writer,kw:kwShow(i.kw),cur:f.cur,prev:f.prev,ym:i.deadline?ymOf(i.deadline):null,live:i.live||''});
+  });
+  out.sort((a,b)=>a.cur-b.cur);
+  return out;
+}
+function personStats(w){
+  const mine=w?state.calendar.filter(i=>i.writer===w):state.calendar.slice();
+  const today=todayIso();
+  const due=mine.filter(i=>i.deadline&&ymOf(i.deadline)===scopeYm);
+  const pub=due.filter(i=>normStatus(i.status)==='Done').length;
+  const liveAll=mine.filter(i=>normStatus(i.status)==='Done');
+  const rkF=rankMapsFull();
+  let ranked=0,t10=0,t20=0;
+  liveAll.forEach(i=>{const f=bestRankInfo(i,rkF);if(f){ranked++;if(f.cur<=10)t10++;if(f.cur<=20)t20++}});
+  const urls=new Set(liveAll.map(i=>normUrl(i.live)).filter(Boolean));
+  const clicks=((state.gsc&&state.gsc.pages)||[]).reduce((a,p)=>a+(urls.has(normUrl(p.n))?p.c:0),0);
+  const pend=mine.filter(i=>normStatus(i.status)!=='Done');
+  const overdue=pend.filter(i=>i.deadline&&i.deadline<today).length;
+  return {mine,due:due.length,pub,liveAll,ranked,t10,t20,clicks,pend,overdue,rkF};
+}
+let pfInit=false;
+function renderProfile(){
+  const writers=[...new Set(state.calendar.map(i=>String(i.writer||'')))].filter(Boolean).sort();
+  const sel=$('#pfSel');
+  const isAdmin=backend!=='cloud'||cloudRole==='admin';
+  let match=null;
+  if(backend==='cloud'&&cloudUser){
+    const lp=cloudUser.email.split('@')[0].toLowerCase();
+    match=writers.find(x=>lp.includes(x.toLowerCase())||x.toLowerCase().includes(lp))||null;
+  }
+  if(!isAdmin){
+    /* members are locked to their own profile; unmatched members get the team view */
+    sel.disabled=true;
+    sel.innerHTML=match?('<option selected>'+esc(match)+'</option>'):'<option value="">Overall \u00b7 team</option>';
+    sel.value=match||'';
+  }else{
+    sel.disabled=false;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Overall \u00b7 team</option>'+writers.map(w=>'<option'+(w===cur?' selected':'')+'>'+esc(w)+'</option>').join('');
+    if(!pfInit){pfInit=true;if(match)sel.value=match;}
+  }
+  const w=sel.value||null;
+  const roles={'Poulami':'Content Writer','Sarang':'Content Writer \u00b7 PR Lead'};
+  const name=w||'Team \u00b7 all writers';
+  const initials=w?w.slice(0,2).toUpperCase():'TM';
+  $('#pfHint').textContent=(backend==='cloud'&&cloudUser)?((isAdmin?'admin view \u00b7 pick anyone \u00b7 ':'your profile \u00b7 ')+cloudUser.email):'';
+  $('#pfHead').innerHTML='<div class="pf-av">'+initials+'</div><div><h3>'+esc(name)+'</h3><div class="mini-note">'+(w?(roles[w]||'Team member'):'Combined view of the whole writing team')+'</div></div>';
+  const s=personStats(w);
+  $('#pfMonA').textContent=ymLabel(scopeYm);
+  $('#pfKpis').innerHTML=[
+    {l:'Due \u00b7 '+ymShort(scopeYm),v:s.due,f:'briefs with this month\u2019s deadline'},
+    {l:'Published \u00b7 '+ymShort(scopeYm),v:s.pub,f:s.due?Math.round(s.pub/s.due*100)+'% of due':''},
+    {l:'Live all-time',v:s.liveAll.length,f:'blogs published overall'},
+    {l:'Keywords ranking',v:s.ranked,f:s.t10+' in Top 10 \u00b7 '+s.t20+' in Top 20'},
+    {l:'GSC clicks',v:s.clicks.toLocaleString(),f:'on their live pages (export range)'},
+    {l:'Pending',v:s.pend.length,f:s.overdue+' overdue'}
+  ].map(k=>'<div class="kpi"><div class="label">'+k.l+'</div><div class="value">'+k.v+'</div><div class="foot">'+(k.f||'')+'</div></div>').join('');
+  const wins=rankImpact(s.rkF,w||undefined);
+  $('#tblPfWins').innerHTML='<thead><tr><th>Keyword</th>'+(w?'':'<th>Writer</th>')+'<th class="r">Pos</th><th class="r">\u0394</th><th>Blog</th></tr></thead><tbody>'+
+    (wins.length?wins.map(r=>'<tr><td>'+esc(r.kw)+'</td>'+(w?'':'<td>'+esc(r.w)+'</td>')+'<td class="r">'+rankPill(r.cur)+'</td><td class="r">'+deltaPill(r.prev,r.cur)+'</td><td>'+(r.live?'<a href="'+esc(r.live)+'" target="_blank" rel="noopener">open \u2197</a>':'\u2014')+'</td></tr>').join(''):
+    '<tr><td colspan="'+(w?4:5)+'" class="mini-note">No rankings yet \u2014 normal in the first 4\u20138 weeks after publish. Each Ahrefs import updates this.</td></tr>')+'</tbody>';
+  const pend=s.pend.slice().sort((a,b)=>String(a.deadline||'9')<String(b.deadline||'9')?-1:1);
+  const today=todayIso();
+  $('#pfPendCount').textContent=pend.length+' items';
+  $('#tblPfPend').innerHTML='<thead><tr>'+(w?'':'<th>Writer</th>')+'<th>Keyword</th><th>Status</th><th>Deadline</th></tr></thead><tbody>'+
+    (pend.length?pend.map(i=>'<tr>'+(w?'':'<td>'+esc(i.writer)+'</td>')+'<td>'+esc(kwShow(i.kw))+'</td><td>'+esc(i.status)+'</td><td>'+(i.deadline?esc(i.deadline)+(i.deadline<today?' <span class="pill" style="background:#FCE6E3;color:#B3261E">OVERDUE</span>':''):'\u2014')+'</td></tr>').join(''):
+    '<tr><td colspan="'+(w?3:4)+'" class="mini-note">Nothing pending \u2014 all clear.</td></tr>')+'</tbody>';
+  const tips=[];
+  if(s.due&&s.pub/s.due<0.5)tips.push('Publishing pace: '+s.pub+'/'+s.due+' for '+ymLabel(scopeYm)+' \u2014 clearing the review/approval queue is the fastest win.');
+  else if(s.due)tips.push('Strong publishing month: '+s.pub+'/'+s.due+' briefs live for '+ymLabel(scopeYm)+'.');
+  if(s.overdue>0)tips.push(s.overdue+' brief'+(s.overdue>1?'s':'')+' past deadline \u2014 reschedule or ship this week.');
+  if(s.liveAll.length>0&&s.ranked===0)tips.push('No keywords ranking yet \u2014 normal at this blog age; make sure every live post is indexed in GSC and has 3+ internal links.');
+  if(s.ranked>0&&s.t10===0)tips.push(s.ranked+' keyword'+(s.ranked>1?'s':'')+' ranking, none in Top 10 yet \u2014 next lever: internal links from the highest-authority pages and refreshed meta titles.');
+  if(s.t10>0)tips.push(s.t10+' keyword'+(s.t10>1?'s':'')+' in Top 10 \u2014 protect these: keep the content fresh and watch them in the SEO tab.');
+  if(s.liveAll.length>0&&s.clicks===0)tips.push('No Search Console clicks on the live pages in the export window yet \u2014 expect movement after re-crawl.');
+  if(!tips.length)tips.push('On track \u2014 keep the current cadence.');
+  $('#pfImp').innerHTML=tips.map(t=>'<li>'+t+'</li>').join('');
 }
 
 /* ---------------- Search Console ---------------- */
@@ -1806,6 +1964,7 @@ function showView(v){
 function renderView(v){
   if(v==='overview')renderOverview();
   if(v==='gsc')renderGsc();
+  if(v==='profile')renderProfile();
   if(v==='demos')renderDemos();
   if(v==='content')renderContent();
   if(v==='seo')renderSeo();
@@ -1832,7 +1991,7 @@ async function boot(){
   const dy=allDemoYms();
   $('#dFrom').value=dy[0]||'';$('#dTo').value=dy[dy.length-1]||'';
   const hh=(typeof location!=='undefined'&&location.hash?String(location.hash):'').slice(1);
-  const views=['overview','demos','content','seo','gsc','retro','data'];
+  const views=['overview','demos','content','seo','gsc','profile','retro','data'];
   if(views.includes(hh))showView(hh);else renderView('overview');
   $('#storageStatus').innerHTML=storageLabel();
   startRealtime();
@@ -1923,6 +2082,7 @@ wireDrop('seoDrop','seoFile','seoPick','seoPaste','seoAnalyse');
 wireDrop('gscDrop','gscFile','gscPick',null,null);
 wireDrop('anyDrop','anyFile','anyPick','anyPaste','anyImport');
 $('#gq').oninput=()=>renderGsc();
+$('#pfSel').onchange=()=>renderProfile();
 $('#gp').oninput=()=>renderGsc();
 
 boot();
