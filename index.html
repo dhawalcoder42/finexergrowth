@@ -280,11 +280,18 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
 .auth-sub{font-size:13.5px;color:var(--ink-500);margin-bottom:16px;line-height:1.6}
 .boot-card{background:transparent;box-shadow:none}
 .boot-card .auth-sub{color:var(--blue-200)}
-.boot-dots{display:flex;gap:8px;justify-content:center;margin:22px 0 8px}
-.boot-dots span{width:10px;height:10px;border-radius:50%;background:var(--blue-400);animation:bootPulse 1.1s infinite ease-in-out}
-.boot-dots span:nth-child(2){animation-delay:.18s}
-.boot-dots span:nth-child(3){animation-delay:.36s}
-@keyframes bootPulse{0%,100%{opacity:.25;transform:scale(.8)}45%{opacity:1;transform:scale(1)}}
+.folder{position:relative;width:132px;height:100px;margin:0 auto 18px;perspective:460px}
+.f-back{position:absolute;inset:12px 0 0 0;background:linear-gradient(160deg,var(--blue-300),var(--blue-500));border-radius:11px}
+.f-back::before{content:"";position:absolute;top:-10px;left:0;width:50px;height:18px;background:var(--blue-300);border-radius:9px 12px 0 0}
+.f-page{position:absolute;bottom:14px;height:62px;background:#fff;border-radius:7px;box-shadow:0 2px 10px rgba(3,0,68,.28);animation:pagePeek 2.4s ease-in-out infinite}
+.f-page.p1{left:12px;right:12px;--peek:-20px;animation-delay:.12s}
+.f-page.p2{left:19px;right:19px;--peek:-30px;animation-delay:.06s}
+.f-page.p3{left:26px;right:26px;--peek:-40px;animation-delay:0s}
+@keyframes pagePeek{0%,18%,82%,100%{transform:translateY(0)}42%,58%{transform:translateY(var(--peek))}}
+.f-front{position:absolute;left:0;right:0;bottom:0;height:68px;background:linear-gradient(160deg,var(--blue-600),var(--blue-800));border-radius:11px;transform-origin:50% 100%;animation:flapOpen 2.4s ease-in-out infinite;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(3,0,68,.38)}
+@keyframes flapOpen{0%,18%,82%,100%{transform:rotateX(0)}42%,58%{transform:rotateX(-42deg)}}
+.f-mark{width:88px;height:auto;filter:brightness(0) invert(1)}
+@media (prefers-reduced-motion:reduce){.f-front,.f-page{animation:none}}
 .auth-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:1.5px solid var(--ink-200);background:#fff;border-radius:var(--r-pill);padding:11px;font:700 14px var(--font-body);color:var(--ink-800);cursor:pointer;transition:border-color .12s,background .12s}
 .auth-google:hover{border-color:var(--blue-400);background:var(--blue-50)}
 .auth-or{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--ink-300);font-size:12px}
@@ -306,8 +313,13 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
 <body>
 <div class="screen on" id="bootScreen">
   <div class="auth-card boot-card">
-    <div class="logo-plate"><svg class="logo" viewBox="0 0 132.21 20" aria-label="Finexer"><use href="#fnxLogoG"/></svg></div>
-    <div class="boot-dots"><span></span><span></span><span></span></div>
+    <div class="folder" aria-hidden="true">
+      <div class="f-back"></div>
+      <div class="f-page p1"></div>
+      <div class="f-page p2"></div>
+      <div class="f-page p3"></div>
+      <div class="f-front"><svg class="f-mark" viewBox="0 0 132.21 20"><use href="#fnxLogoG"/></svg></div>
+    </div>
     <p class="auth-sub">Loading Growth Retrospective…</p>
   </div>
 </div>
@@ -709,6 +721,12 @@ footer{padding:var(--s-8) 0;color:var(--ink-400);font-size:12.5px;text-align:cen
   <div class="card section-gap">
     <h3>Improvements &amp; focus</h3>
     <ul class="pf-list" id="pfImp"></ul>
+  </div>
+  <div class="card section-gap">
+    <h3>Monthly review <span class="hint" id="mrDue"></span></h3>
+    <p class="mini-note">Answer in your own words \u2014 the <b>dashboard note</b> under each question is an auto-analysis of this month's data you can use as a starting point (or hit \u201cUse\u201d). Answers save per person per month and admins can read them.</p>
+    <div id="mrList"></div>
+    <div class="save-row"><button class="btn btn-primary" id="mrSave">Save review</button><span class="mini-note" id="mrStamp"></span></div>
   </div>
 </section>
 
@@ -1591,6 +1609,34 @@ function renderProfile(){
   if(s.liveAll.length>0&&s.clicks===0)tips.push('No Search Console clicks on the live pages in the export window yet \u2014 expect movement after re-crawl.');
   if(!tips.length)tips.push('On track \u2014 keep the current cadence.');
   $('#pfImp').innerHTML=tips.map(t=>'<li>'+t+'</li>').join('');
+  /* ---- monthly review (4 questions + dashboard notes) ---- */
+  const revKey=w||'__team';
+  const saved=(((state.manual||{}).reviews||{})[scopeYm]||{})[revKey]||{};
+  const bestWin=wins.length?('\u201c'+wins[0].kw+'\u201d ranking at #'+wins[0].cur):'';
+  const notes={};
+  notes[1]=((s.due?('Published '+s.pub+' of '+s.due+' briefs due in '+ymLabel(scopeYm)+'. '):'')+(wins.length?(wins.length+' keyword'+(wins.length>1?'s':'')+' now ranking \u2014 best: '+bestWin+'. '):'')+(s.clicks?(s.clicks.toLocaleString()+' Google Search clicks on live pages.'):''))||'No published output logged this month yet.';
+  notes[2]=s.pend.length?(s.pend.length+' briefs in the pipeline'+(s.overdue?(' ('+s.overdue+' overdue \u2014 clear these first)'):'')+'. Next up: '+pend.slice(0,3).map(i=>kwShow(i.kw)+(i.deadline?(' ('+i.deadline+')'):'')).join('; ')+'.'):'Pipeline clear \u2014 plan next month\u2019s briefs.';
+  notes[3]=(s.ranked?('Live blogs hold '+s.ranked+' ranking keyword'+(s.ranked>1?'s':'')+' ('+s.t20+' in Top 20)'):'Rankings are still maturing (4\u20138 week lag after publish)')+(s.clicks?(' and drew '+s.clicks.toLocaleString()+' Google Search clicks in the export window'):'')+(w?' \u2014 feeding the content engine behind demo bookings.':' \u2014 team context: '+demoScope(scopeYm).count+' demo calls booked this month.');
+  notes[4]=tips.slice(0,2).join(' ');
+  const QT={1:'What have you done best this month?',2:'What are you planning to do next?',3:'How has your work impacted the business?',4:'What can we improve or do better next month?'};
+  const [ry,rm]=scopeYm.split('-').map(Number);
+  $('#mrDue').textContent='to share on '+(new Date(Date.UTC(ry,rm,0)).getUTCDate())+' '+ymLabel(scopeYm);
+  $('#mrList').innerHTML=[1,2,3,4].map(i=>'<div class="fill'+(i>1?' section-gap':'')+'"><label>'+i+'. '+QT[i]+'</label><textarea id="mrQ'+i+'" rows="3" placeholder="Your answer\u2026">'+esc(saved['q'+i]||'')+'</textarea><p class="mini-note" style="margin-top:6px"><b>Dashboard note:</b> '+esc(notes[i])+' <button class="btn btn-quiet" style="padding:3px 10px;font-size:11px" data-use="'+i+'" type="button">Use \u2191</button></p></div>').join('');
+  $('#mrStamp').textContent=saved.at?('last saved '+saved.at+(saved.by?(' by '+String(saved.by).split('@')[0]):'')):'not filled yet';
+  $('#mrList').onclick=e=>{
+    const b=e&&e.target&&e.target.closest?e.target.closest('button[data-use]'):null;
+    if(!b)return;
+    const ta=$('#mrQ'+b.dataset.use),n=notes[b.dataset.use];
+    ta.value=ta.value?(ta.value+'\n'+n):n;
+  };
+  $('#mrSave').onclick=async()=>{
+    state.manual.reviews=state.manual.reviews||{};
+    const mth=state.manual.reviews[scopeYm]=state.manual.reviews[scopeYm]||{};
+    mth[revKey]={q1:$('#mrQ1').value,q2:$('#mrQ2').value,q3:$('#mrQ3').value,q4:$('#mrQ4').value,by:cloudUser?cloudUser.email:'',at:todayIso()};
+    await sSet(KEYS.manual,state.manual);
+    $('#mrStamp').textContent='last saved '+todayIso()+(cloudUser?(' by '+cloudUser.email.split('@')[0]):'');
+    toast('Review saved \u00b7 '+(w||'team')+' \u00b7 '+ymLabel(scopeYm));
+  };
 }
 
 /* ---------------- Search Console ---------------- */
